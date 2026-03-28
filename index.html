@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企融智配 - 企业融资智能匹配助手</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .header {
+    text-align: center;
+    color: white;
+  }
+  .header-logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid rgba(255,255,255,0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    background: linear-gradient(90deg, #f7b733, #fc4a1a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 1px;
+  }
+  .header-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #f7b733, #fc4a1a);
+    color: white;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .main-card {
+    background: rgba(255,255,255,0.97);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  /* ---- Chat View ---- */
+  .chat-view {
+    display: flex;
+    flex-direction: column;
+    height: 620px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 5px; }
+  .chat-messages::-webkit-scrollbar-track { background: #f1f1f1; }
+  .chat-messages::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+  .msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user { flex-direction: row-reverse; }
+  
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .avatar.ai {
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    border: 2px solid #c9a227;
+    overflow: hidden;
+  }
+  .avatar.ai img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar.user { background: linear-gradient(135deg, #2c3e50, #1a1a2e); }
+
+  .bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .msg.ai .bubble {
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    color: #1a1a2e;
+    border-top-left-radius: 4px;
+    border: 1px solid rgba(247, 183, 51, 0.2);
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+    color: white;
+    border-top-right-radius: 4px;
+  }
+
+  /* Result card inside bubble */
+  .result-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e0e8ff;
+    overflow: hidden;
+    margin-top: 6px;
+    box-shadow: 0 4px 16px rgba(26,115,232,0.1);
+  }
+  .result-header {
+    background: linear-gradient(90deg, #c9a227, #f7b733);
+    color: white;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-header .rank-badge {
+    background: rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 12px;
+  }
+
+  .product-item {
+    border-bottom: 1px solid #f0f4ff;
+    padding: 14px 16px;
+  }
+  .product-item:last-child { border-bottom: none; }
+  
+  .product-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 12px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: #FFD700; color: #7a5c00; }
+  .rank-2 { background: #C0C0C0; color: #444; }
+  .rank-3 { background: #CD7F32; color: white; }
+  .rank-other { background: #e0e8ff; color: #1a73e8; }
+
+  .product-title-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .product-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #1a1a2e;
+  }
+  .product-bank {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #666;
+    background: #f0f4ff;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .product-score {
+    margin-left: auto;
+    font-size: 12px;
+    color: #c9a227;
+    font-weight: 600;
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  
+  .product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .meta-tag {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-amount { background: #fff3e0; color: #e65100; }
+  .tag-rate   { background: #e8f5e9; color: #2e7d32; }
+  .tag-term   { background: #e3f2fd; color: #1565c0; }
+  .tag-type   { background: #fce4ec; color: #c62828; }
+
+  .product-section { margin-bottom: 6px; }
+  .product-section-label {
+    font-size: 11px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .product-section-content {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+  }
+  .product-section-content.reason { color: #c9a227; font-style: italic; }
+  .product-section-content.materials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .material-chip {
+    font-size: 11px;
+    background: #f5f5f5;
+    color: #444;
+    padding: 2px 8px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .no-match {
+    padding: 20px;
+    text-align: center;
+    color: #e53935;
+    font-size: 14px;
+  }
+  .no-match-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* Summary card */
+  .summary-card {
+    background: #f8f9ff;
+    border: 1px solid #e0e8ff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 6px;
+  }
+  .summary-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #c9a227;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .summary-item {
+    background: white;
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e8eaed;
+  }
+  .summary-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .summary-value { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+
+  /* Input form */
+  .form-panel {
+    border-top: 1px solid #e8eaed;
+    background: #fafbff;
+    padding: 16px 28px;
+  }
+
+  .form-title {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label {
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+  }
+  .form-group input,
+  .form-group select {
+    padding: 8px 12px;
+    border: 1.5px solid #d0d9e8;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: white;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: #c9a227; }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #c9a227, #f7b733);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(247, 183, 51, 0.4); }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* Quick input via text */
+  .quick-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .quick-input {
+    flex: 1;
+    padding: 8px 14px;
+    border: 1.5px solid #d0d9e8;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    background: white;
+  }
+  .quick-input:focus { border-color: #c9a227; }
+  .quick-send-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #c9a227, #f7b733);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .quick-send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(247, 183, 51, 0.3); }
+
+  .divider { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+  .divider-line { flex: 1; height: 1px; background: #e0e0e0; }
+  .divider-text { font-size: 11px; color: #aaa; white-space: nowrap; }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 7px; height: 7px;
+    background: #c9a227;
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .stat-bar {
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .stat-bar-text { font-size: 12px; color: #c9a227; font-weight: 600; }
+
+  /* Phone capture modal */
+  .phone-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .phone-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 360px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .phone-modal h3 {
+    font-size: 18px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+  }
+  .phone-modal p {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  .phone-modal input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .phone-modal input:focus { border-color: #c9a227; }
+  .phone-modal .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #c9a227, #f7b733);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .phone-modal .btn-skip {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #999;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* WeChat QR section */
+  .wechat-section {
+    background: linear-gradient(135deg, #fff9e6, #fff3cc);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    text-align: center;
+    border: 2px solid rgba(201, 162, 39, 0.3);
+  }
+  .wechat-section h4 {
+    font-size: 15px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+  }
+  .wechat-section p {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  .wechat-qr {
+    width: 160px;
+    height: 160px;
+    border-radius: 8px;
+    margin: 0 auto;
+    display: block;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .wechat-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #07c160, #05a050);
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-row-2 { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .bubble { max-width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <img src="logo.jpg" alt="企融智配" class="header-logo" />
+    <h1>企融智配</h1>
+    <p>企业融资智能匹配助手 · 45款银行产品实时匹配</p>
+    <span class="header-badge">知识库：45款银行产品 · 2026年实时利率</span>
+  </div>
+
+  <div class="main-card">
+    <div class="chat-view">
+      <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="msg ai">
+          <div class="avatar ai"><img src="logo.jpg" alt="企融智配" /></div>
+          <div class="bubble">
+            您好！我是<strong>企融智配</strong>，您的专属企业融资顾问<br><br>
+            我已接入 <strong>45 款</strong>主流银行贷款产品库（含国有大行、股份制银行及地方银行），可根据您的企业情况精准匹配最优融资方案。<br><br>
+            请填写下方的企业信息表单，或直接描述您的需求（例如：<em>"企业成立3年，B级纳税，年营收500万，有房产抵押"</em>），我将为您输出专属融资报告。<br><br>
+            💡 <strong>温馨提示</strong>：查看完整方案后，您可以留下手机号预约15年融资专家1对1咨询，或扫码添加企业微信获取详细方案。
+          </div>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <div class="quick-input-row">
+          <input type="text" class="quick-input" id="quickInput" 
+            placeholder="直接描述需求，例如：企业成立2年，B级纳税，年营收300万，有抵押房产..." />
+          <button class="quick-send-btn" onclick="handleQuickInput()">发送</button>
+        </div>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">或填写精准信息表单</div>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>📅 企业成立年限</label>
+            <select id="f_years">
+              <option value="">请选择</option>
+              <option value="0.5">不足6个月</option>
+              <option value="1">6个月-1年</option>
+              <option value="2">1-2年</option>
+              <option value="3">2-3年</option>
+              <option value="5">3-5年</option>
+              <option value="10">5年以上</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>⭐ 纳税等级</label>
+            <select id="f_tax_level">
+              <option value="">请选择</option>
+              <option value="A">A级（最优）</option>
+              <option value="B">B级</option>
+              <option value="C">C级</option>
+              <option value="D">D级</option>
+              <option value="0">未纳税/零申报</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>💰 年纳税额</label>
+            <select id="f_tax_amount">
+              <option value="">请选择</option>
+              <option value="0">0（零申报）</option>
+              <option value="0.5">1万以下</option>
+              <option value="1">1-2万</option>
+              <option value="3">2-5万</option>
+              <option value="7">5-10万</option>
+              <option value="15">10-20万</option>
+              <option value="30">20万以上</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>📊 年营业收入</label>
+            <select id="f_revenue">
+              <option value="">请选择</option>
+              <option value="50">50万以下</option>
+              <option value="150">50-200万</option>
+              <option value="350">200-500万</option>
+              <option value="700">500-1000万</option>
+              <option value="1500">1000万以上</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🏠 抵押物情况</label>
+            <select id="f_collateral">
+              <option value="">请选择</option>
+              <option value="none">无抵押物</option>
+              <option value="house">有房产（无按揭）</option>
+              <option value="house_mortgage">有房产（有按揭）</option>
+              <option value="commercial">有商业房产</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="handleFormSubmit()">
+          🔍 立即匹配贷款方案
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== 知识库 =====================
+const BANK_PRODUCTS = [
+  {"银行名称":"中国工商银行","产品名称":"经营快贷","进件要求":"营业执照、法人身份证、对公流水、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高300万","执行利率":"3.25%-4.85%","备注":"小微企业信用贷","进件剔除条件":"成立不满6个月；纳税D级；法人连三累六；经营异常","必查材料":"营业执照、法人身份证、对公流水、纳税证明、征信","测评扣分点":"经营不满、纳税低、法人征信差","加分项":"纳税超1万、流水稳定、企业成立2年+","类型":"信用"},
+  {"银行名称":"中国工商银行","产品名称":"经营抵押贷","进件要求":"营业执照、法人征信、房产抵押、经营流水","可贷年限":"最长10年","授信额度":"最高1000万","执行利率":"3.45%-5.25%","备注":"房产抵押类","进件剔除条件":"抵押物楼龄超30年；流水断档；法人征信不良","必查材料":"营业执照、法人征信、房产证、流水、评估报告","测评扣分点":"抵押物瑕疵、流水造假、企业涉诉","加分项":"核心城区房产、流水翻倍、抵押物高估值","类型":"抵押"},
+  {"银行名称":"中国农业银行","产品名称":"微捷贷","进件要求":"营业执照、法人征信、纳税证明","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.35%-4.95%","备注":"纯线上税贷","进件剔除条件":"纳税为0；负申报；法人不良；企业涉诉","必查材料":"营业执照、法人征信、纳税证明","测评扣分点":"零申报、法人征信花、经营空壳","加分项":"纳税1万+、稳定流水、企业成立2年","类型":"信用"},
+  {"银行名称":"中国农业银行","产品名称":"小微企业经营贷(抵押)","进件要求":"营业执照、房产抵押、对公流水、经营合同","可贷年限":"最长10年","授信额度":"最高800万","执行利率":"3.55%-5.65%","备注":"抵押类经营贷","进件剔除条件":"营业执照不满1年；抵押物产权不清；流水不足","必查材料":"营业执照、房产证、对公流水、经营合同","测评扣分点":"经营年限短、抵押物有瑕疵、流水断裂","加分项":"核心区房产、年纳税5万+、对公流水稳定","类型":"抵押"},
+  {"银行名称":"中国银行","产品名称":"中银企E贷","进件要求":"营业执照、企业征信、法人征信、纳税证明","可贷年限":"最长3年","授信额度":"最高1000万","执行利率":"3.40%-5.15%","备注":"全线上信用贷","进件剔除条件":"企业成立不满6个月；纳税零；法人征信花","必查材料":"营业执照、法人身份证、企业征信、纳税证明","测评扣分点":"成立短、纳税低、法人不良","加分项":"纳税A级、流水稳定、企业无涉诉","类型":"信用"},
+  {"银行名称":"中国银行","产品名称":"抵押经营贷","进件要求":"营业执照、房产抵押、法人征信、经营流水","可贷年限":"最长20年","授信额度":"最高2000万","执行利率":"3.55%-5.35%","备注":"随借随还","进件剔除条件":"抵押物共有人不同意；企业涉诉；流水不覆盖","必查材料":"房产证、营业执照、法人征信、流水、评估报告","测评扣分点":"共有权拒绝、企业异常、流水断裂","加分项":"高估值房产、年纳税10万+、经营稳定","类型":"抵押"},
+  {"银行名称":"中国建设银行","产品名称":"商户云贷","进件要求":"营业执照、收单流水、法人征信、经营场地证明","可贷年限":"最长3年","授信额度":"最高200万","执行利率":"3.30%-4.75%","备注":"个体户专属","进件剔除条件":"收单流水造假；法人不良；经营场地虚假","必查材料":"营业执照、法人身份证、收单流水、经营证明","测评扣分点":"流水造假、异地经营、空壳","加分项":"本地商户、流水稳定、合规经营","类型":"信用"},
+  {"银行名称":"中国建设银行","产品名称":"经营快贷","进件要求":"营业执照、对公流水、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高800万","执行利率":"3.55%-5.65%","备注":"信用/抵押混合","进件剔除条件":"成立不满6个月；纳税低；法人征信差","必查材料":"营业执照、对公流水、纳税证明、法人征信","测评扣分点":"经营不满、纳税低、法人征信花","加分项":"纳税2万+、流水持续增长、无涉诉","类型":"信用"},
+  {"银行名称":"交通银行","产品名称":"税融通","进件要求":"营业执照、纳税证明、法人征信、经营流水","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.50%-5.05%","备注":"按纳税额授信","进件剔除条件":"纳税过低；负申报；法人连三累六；涉诉","必查材料":"营业执照、纳税证明、法人征信、流水","测评扣分点":"纳税为0、长期零申报、法人征信黑","加分项":"年纳税2万+、稳定增长、经营规范","类型":"信用"},
+  {"银行名称":"交通银行","产品名称":"抵押经营贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长10年","授信额度":"最高800万","执行利率":"3.65%-5.45%","备注":"循环授信","进件剔除条件":"抵押物变现差；空壳经营；流水断裂","必查材料":"房产证、营业执照、法人征信、流水","测评扣分点":"抵押物贬值、经营无实质、流水造假","加分项":"核心商圈房产、稳定对公流水","类型":"抵押"},
+  {"银行名称":"邮储银行","产品名称":"小微易贷","进件要求":"营业执照、经营流水、纳税证明","可贷年限":"最长3年","授信额度":"最高300万","执行利率":"3.45%-4.95%","备注":"无抵押信用贷","进件剔除条件":"成立不满6个月；纳税零；流水断档","必查材料":"营业执照、对公流水、纳税证明","测评扣分点":"经营短、纳税低、流水不稳","加分项":"本地经营、纳税1万+、经营满1年","类型":"信用"},
+  {"银行名称":"邮储银行","产品名称":"抵押经营贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长10年","授信额度":"最高1000万","执行利率":"3.55%-5.65%","备注":"房产抵押","进件剔除条件":"楼龄超30年；法人征信不良；经营亏损","必查材料":"营业执照、房产证、法人征信、流水、评估报告","测评扣分点":"房龄超、产权不清、法人征信差","加分项":"无按揭房产、高评估价、经营盈利","类型":"抵押"},
+  {"银行名称":"招商银行","产品名称":"招贷云","进件要求":"营业执照、法人征信、对公流水、纳税证明","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.55%-5.25%","备注":"线上快速审批","进件剔除条件":"成立不满6个月；征信黑名单；纳税零","必查材料":"营业执照、法人征信、对公流水、纳税证明","测评扣分点":"经营不满、征信花、纳税低","加分项":"纳税稳定、年流水高、无逾期","类型":"信用"},
+  {"银行名称":"招商银行","产品名称":"抵押快贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长10年","授信额度":"最高1500万","执行利率":"3.75%-5.45%","备注":"大额抵押","进件剔除条件":"抵押物不在主城区；征信黑；流水无法覆盖","必查材料":"营业执照、房产证、法人征信、流水、评估报告","测评扣分点":"偏远房产、征信差、流水低","加分项":"主城优质房产、流水充足、纳税高","类型":"抵押"},
+  {"银行名称":"中信银行","产品名称":"信贷通","进件要求":"营业执照、法人征信、纳税证明、经营流水","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.60%-5.35%","备注":"信用贷款","进件剔除条件":"成立不满6个月；纳税低；法人征信差","必查材料":"营业执照、法人征信、纳税证明、流水","测评扣分点":"经营短、纳税低、法人征信黑","加分项":"纳税1万+、稳定流水、行业优质","类型":"信用"},
+  {"银行名称":"中信银行","产品名称":"房抵贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长20年","授信额度":"最高3000万","执行利率":"3.65%-5.45%","备注":"最高3000万","进件剔除条件":"法人征信黑；企业涉诉；抵押不在城区","必查材料":"房产证、营业执照、法人征信、流水、评估报告","测评扣分点":"法人黑、企业涉诉、抵押物偏远","加分项":"高估值房产、优质企业、年纳税高","类型":"抵押"},
+  {"银行名称":"光大银行","产品名称":"税金贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.65%-5.45%","备注":"无抵押税贷","进件剔除条件":"纳税D级；法人涉诉；经营不足6个月","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人涉诉、经营短","加分项":"纳税A级、经营稳定、无涉诉","类型":"信用"},
+  {"银行名称":"光大银行","产品名称":"房抵经营贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长10年","授信额度":"最高1000万","执行利率":"3.75%-5.55%","备注":"房产抵押","进件剔除条件":"抵押物产权纠纷；流水不稳；法人不良","必查材料":"营业执照、房产证、法人征信、流水","测评扣分点":"抵押物纠纷、流水不稳、法人不良","加分项":"优质房产、流水充足、纳税稳定","类型":"抵押"},
+  {"银行名称":"兴业银行","产品名称":"兴税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.65%-5.35%","备注":"税贷","进件剔除条件":"纳税为0；法人涉诉；成立不足1年","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"零纳税、法人涉诉、成立短","加分项":"纳税合规、稳定经营、优质单位","类型":"信用"},
+  {"银行名称":"兴业银行","产品名称":"兴抵贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长20年","授信额度":"最高2000万","执行利率":"3.75%-5.55%","备注":"大额房抵","进件剔除条件":"法人不良；抵押物楼龄超；流水断档","必查材料":"营业执照、房产证、法人征信、流水、评估报告","测评扣分点":"法人不良、楼龄超、流水不稳","加分项":"核心房产、年纳税10万+、经营持续","类型":"抵押"},
+  {"银行名称":"民生银行","产品名称":"民生税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.70%-5.45%","备注":"税贷产品","进件剔除条件":"纳税D级；法人连三累六；成立不满6个月","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人征信差、经营短","加分项":"纳税B级+、经营2年+、行业优质","类型":"信用"},
+  {"银行名称":"民生银行","产品名称":"房抵贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长20年","授信额度":"最高2000万","执行利率":"3.80%-5.65%","备注":"循环随借随还","进件剔除条件":"抵押物瑕疵；法人涉诉；流水造假","必查材料":"营业执照、房产证、法人征信、流水、评估报告","测评扣分点":"抵押物瑕疵、法人涉诉、流水不实","加分项":"高估值房产、年纳税高、经营稳定","类型":"抵押"},
+  {"银行名称":"浦发银行","产品名称":"浦税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.65%-5.35%","备注":"税贷","进件剔除条件":"纳税零；法人不良；成立不满6个月","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人征信花、经营短","加分项":"纳税合规、稳定流水、企业规范","类型":"信用"},
+  {"银行名称":"浦发银行","产品名称":"浦抵贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长20年","授信额度":"最高2000万","执行利率":"3.75%-5.55%","备注":"房抵经营贷","进件剔除条件":"抵押物楼龄超30年；法人涉诉；流水不稳","必查材料":"营业执照、房产证、法人征信、流水、评估报告","测评扣分点":"楼龄超、法人涉诉、流水不稳","加分项":"核心城区房产、高纳税、经营规范","类型":"抵押"},
+  {"银行名称":"华夏银行","产品名称":"华税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高300万","执行利率":"3.75%-5.55%","备注":"中小企业税贷","进件剔除条件":"纳税零；法人不良；成立不满1年","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人不良、成立短","加分项":"纳税合规、稳定经营、本地企业","类型":"信用"},
+  {"银行名称":"华夏银行","产品名称":"抵押经营贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长10年","授信额度":"最高1000万","执行利率":"3.85%-5.75%","备注":"房产抵押","进件剔除条件":"楼龄超30年；法人不良；流水断档","必查材料":"营业执照、房产证、法人征信、流水","测评扣分点":"楼龄超、法人不良、流水不稳","加分项":"核心房产、纳税合规、经营稳定","类型":"抵押"},
+  {"银行名称":"广发银行","产品名称":"广发税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.75%-5.55%","备注":"税贷产品","进件剔除条件":"纳税为0；法人涉诉；成立不满6个月","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人涉诉、经营短","加分项":"纳税稳定、优质企业、无涉诉","类型":"信用"},
+  {"银行名称":"恒丰银行","产品名称":"恒税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.85%-5.65%","备注":"循环授信","进件剔除条件":"纳税等级低；法人征信花；涉诉","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"纳税低、法人征信花、经营风险","加分项":"纳税A级、经营稳定、无涉诉","类型":"信用"},
+  {"银行名称":"渤海银行","产品名称":"渤税贷","进件要求":"营业执照、纳税证明、法人征信","可贷年限":"最长3年","授信额度":"最高500万","执行利率":"3.80%-5.75%","备注":"无抵押信用贷","进件剔除条件":"纳税为0；法人不良；企业高风险","必查材料":"营业执照、纳税证明、法人征信","测评扣分点":"零申报、法人征信差、高负债","加分项":"纳税1万+、稳定流水、合规经营","类型":"信用"},
+  {"银行名称":"渤海银行","产品名称":"抵押经营贷","进件要求":"营业执照、房产抵押、法人征信、流水","可贷年限":"最长20年","授信额度":"最高1500万","执行利率":"3.90%-5.95%","备注":"二押","进件剔除条件":"二押顺位不足；楼龄过老；征信差","必查材料":"营业执照、房产证、法人征信、流水","测评扣分点":"楼龄超、二押低、法人征信黑","加分项":"无按揭房产、高评估、顺位高","类型":"抵押"},
+  {"银行名称":"宁波银行","产品名称":"贷易通","进件要求":"营业执照、流水、法人征信、纳税证明","可贷年限":"最长3年","授信额度":"最高1000万","执行利率":"3.85%-5.75%","备注":"小微企业","进件剔除条件":"流水造假；法人不良；经营不稳定","必查材料":"营业执照、流水、法人征信、纳税证明","测评扣分点":"流水造假、法人征信差、经营不稳","加分项":"稳定流水、纳税合规、无涉诉","类型":"信用"}
+];
+
+// ===================== 匹配引擎 =====================
+function matchProducts(params) {
+  const { years, taxLevel, taxAmount, revenue, collateral } = params;
+  const hasCollateral = collateral && collateral !== 'none';
+  const results = [];
+
+  BANK_PRODUCTS.forEach(p => {
+    const excl = p['进件剔除条件'] || '';
+    const isCollateralProduct = p['类型'] === '抵押' || excl.includes('抵押物') || p['进件要求'].includes('房产抵押');
+    
+    // ---- 硬剔除检查 ----
+    let excluded = false;
+    let excludeReason = '';
+
+    // 成立年限
+    if (excl.includes('成立不满6个月') && years <= 0.5) { excluded = true; excludeReason = '企业成立年限不足6个月'; }
+    if (excl.includes('不满1年') && years < 1) { excluded = true; excludeReason = '企业成立年限不足1年'; }
+    if (excl.includes('营业执照不满1年') && years < 1) { excluded = true; excludeReason = '营业执照年限不足'; }
+    
+    // 纳税等级
+    if (excl.includes('纳税D级') && taxLevel === 'D') { excluded = true; excludeReason = '纳税等级D级被剔除'; }
+    if ((excl.includes('纳税零') || excl.includes('纳税为0') || excl.includes('纳税零申报')) && (taxLevel === '0' || taxAmount <= 0)) { excluded = true; excludeReason = '零纳税/零申报被剔除'; }
+    
+    // 抵押物：需要抵押物但没有
+    if (isCollateralProduct && !hasCollateral) { excluded = true; excludeReason = '该产品需要房产抵押'; }
+    
+    if (excluded) return;
+
+    // ---- 评分 ----
+    let score = 50; // 基础分
+    const reasons = [];
+
+    // 成立年限加分
+    if (years >= 5) { score += 20; reasons.push('企业成立年限长，信誉度高'); }
+    else if (years >= 2) { score += 12; reasons.push('企业成立满2年，符合主流要求'); }
+    else if (years >= 1) { score += 5; }
+    
+    // 纳税等级加分
+    if (taxLevel === 'A') { score += 25; reasons.push('A级纳税企业，属于银行优质客户'); }
+    else if (taxLevel === 'B') { score += 15; reasons.push('B级纳税，资质良好'); }
+    else if (taxLevel === 'C') { score += 5; }
+    else if (taxLevel === 'D') { score -= 20; }
+    
+    // 纳税金额加分
+    if (taxAmount >= 10) { score += 20; reasons.push(`年纳税${taxAmount}万，明显高于门槛`); }
+    else if (taxAmount >= 5) { score += 12; reasons.push(`年纳税${taxAmount}万，超过普通门槛`); }
+    else if (taxAmount >= 2) { score += 7; reasons.push(`年纳税${taxAmount}万，满足基本要求`); }
+    else if (taxAmount >= 1) { score += 3; }
+    
+    // 抵押物加分（对抵押产品）
+    if (isCollateralProduct && hasCollateral) {
+      score += 20;
+      if (collateral === 'house') { reasons.push('无按揭房产为优质抵押物，可获得更高额度'); }
+      else if (collateral === 'house_mortgage') { reasons.push('有按揭房产可作抵押，需评估剩余价值'); score -= 5; }
+      else if (collateral === 'commercial') { reasons.push('商业房产变现性强，是银行偏好的优质抵押'); score += 5; }
+    }
+    
+    // 营收匹配
+    if (revenue >= 500) { score += 15; reasons.push(`年营收${revenue}万，经营规模较大`); }
+    else if (revenue >= 200) { score += 8; reasons.push(`年营收${revenue}万，经营规模中等`); }
+    else if (revenue >= 50) { score += 3; }
+    
+    // 国有大行优先权（更权威）
+    const bigBanks = ['中国工商银行','中国农业银行','中国银行','中国建设银行','交通银行','邮储银行'];
+    if (bigBanks.includes(p['银行名称'])) { score += 5; }
+
+    // ---- 额度估算 ----
+    const maxAmountStr = p['授信额度'].replace('最高','').replace('万','');
+    const maxAmount = parseInt(maxAmountStr);
+    let estimatedAmount = 0;
+    
+    if (isCollateralProduct) {
+      // 抵押：按营收和抵押物综合估算
+      const base = hasCollateral ? Math.min(revenue * 2, maxAmount) : Math.min(revenue * 0.5, maxAmount);
+      estimatedAmount = Math.round(Math.min(base, maxAmount) * 0.6);
+    } else {
+      // 信用：按纳税额估算（约50-100倍纳税额）
+      const taxBase = taxAmount * 70;
+      const revenueBase = revenue * 0.3;
+      estimatedAmount = Math.round(Math.min(Math.max(taxBase, revenueBase), maxAmount) * 0.7);
+    }
+    estimatedAmount = Math.max(estimatedAmount, 30); // 最低30万
+    estimatedAmount = Math.min(estimatedAmount, maxAmount);
+    
+    results.push({
+      product: p,
+      score: Math.min(score, 100),
+      reasons,
+      estimatedAmount
+    });
+  });
+
+  // 排序：分数降序
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, 6); // 返回前6名
+}
+
+// ===================== 文字解析 =====================
+function parseNaturalInput(text) {
+  const params = {
+    years: null, taxLevel: null, taxAmount: null, revenue: null, collateral: null
+  };
+  
+  // 成立年限
+  const yearMatch = text.match(/成立[了]?(\d+(?:\.\d+)?)年/);
+  if (yearMatch) params.years = parseFloat(yearMatch[1]);
+  else if (text.includes('不足6个月') || text.includes('不满6个月')) params.years = 0.3;
+  else if (text.includes('6个月') || text.includes('半年')) params.years = 0.5;
+  
+  // 纳税等级
+  const levelMatch = text.match(/([ABCD])级[纳税]|纳税[等级为]*([ABCD])级?/i);
+  if (levelMatch) params.taxLevel = (levelMatch[1] || levelMatch[2]).toUpperCase();
+  else if (text.includes('零申报') || text.includes('未纳税')) params.taxLevel = '0';
+  
+  // 年纳税额
+  const taxMatch = text.match(/年?纳税[额]?(\d+(?:\.\d+)?)(万|千|元)?/);
+  if (taxMatch) {
+    let val = parseFloat(taxMatch[1]);
+    if (taxMatch[2] === '千') val = val / 10;
+    if (taxMatch[2] === '元') val = val / 10000;
+    params.taxAmount = val;
+  }
+  
+  // 年营收
+  const revMatch = text.match(/年?[营收入额]*(\d+(?:\.\d+)?)万/);
+  if (revMatch) params.revenue = parseFloat(revMatch[1]);
+  
+  // 抵押物
+  if (text.includes('无抵押') || text.includes('没有抵押') || text.includes('无房产')) {
+    params.collateral = 'none';
+  } else if (text.includes('商业') || text.includes('商铺')) {
+    params.collateral = 'commercial';
+  } else if (text.includes('按揭') || text.includes('有贷款')) {
+    params.collateral = 'house_mortgage';
+  } else if (text.includes('房产') || text.includes('房子') || text.includes('抵押')) {
+    params.collateral = 'house';
+  }
+  
+  return params;
+}
+
+// ===================== 渲染结果 =====================
+function renderResults(results, params) {
+  if (!results || results.length === 0) {
+    return `<div class="no-match">
+      <div class="no-match-icon">⚠️</div>
+      <strong>暂无匹配产品</strong><br>
+      当前企业条件暂不满足数据库中的银行进件要求，建议：提升纳税等级、增加经营年限或补充抵押物。
+    </div>`;
+  }
+
+  // 摘要卡片
+  const topAmount = Math.max(...results.map(r => r.estimatedAmount));
+  const topRate = results[0].product['执行利率'];
+  const creditCount = results.filter(r => r.product['类型'] === '信用').length;
+  const mortgageCount = results.filter(r => r.product['类型'] === '抵押').length;
+
+  let html = `
+    <div class="summary-card">
+      <div class="summary-title">📊 匹配摘要</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">推荐产品数</div>
+          <div class="summary-value">${results.length} 款</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">最高可贷额度</div>
+          <div class="summary-value">约 ${topAmount} 万元</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">最优参考利率</div>
+          <div class="summary-value">${topRate}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">产品类型</div>
+          <div class="summary-value">信用${creditCount}款 · 抵押${mortgageCount}款</div>
+        </div>
+      </div>
+    </div>
+    <div class="result-card">
+      <div class="result-header">
+        🏆 为您推荐的最优融资方案
+        <span class="rank-badge">综合评分排序</span>
+      </div>`;
+
+  results.forEach((r, idx) => {
+    const p = r.product;
+    const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+    const rankLabel = idx + 1;
+    const materials = (p['必查材料'] || '').split('、').filter(Boolean);
+    const isCredit = p['类型'] === '信用';
+    
+    html += `
+      <div class="product-item">
+        <div class="product-title-row">
+          <span class="product-rank ${rankClass}">${rankLabel}</span>
+          <span class="product-name">${p['产品名称']}</span>
+          <span class="product-bank">${p['银行名称']}</span>
+          <span class="product-score">评分 ${r.score}</span>
+        </div>
+        <div class="product-meta">
+          <span class="meta-tag tag-amount">💰 预估额度：约 ${r.estimatedAmount} 万</span>
+          <span class="meta-tag tag-rate">📈 利率：${p['执行利率']}</span>
+          <span class="meta-tag tag-term">⏱️ ${p['可贷年限']}</span>
+          <span class="meta-tag tag-type">${isCredit ? '🔓 无需抵押' : '🏠 房产抵押'}</span>
+        </div>
+        <div class="product-section">
+          <div class="product-section-label">✅ 匹配理由</div>
+          <div class="product-section-content reason">${r.reasons.length > 0 ? r.reasons.join('；') : '基本条件符合，建议咨询银行确认。'}</div>
+        </div>
+        <div class="product-section">
+          <div class="product-section-label">📋 所需资料</div>
+          <div class="product-section-content materials">
+            ${materials.map(m => `<span class="material-chip">${m}</span>`).join('')}
+          </div>
+        </div>
+        ${p['加分项'] ? `<div class="product-section">
+          <div class="product-section-label">⭐ 加分项（提高通过率）</div>
+          <div class="product-section-content">${p['加分项']}</div>
+        </div>` : ''}
+      </div>`;
+  });
+
+  html += `</div>`;
+  
+  // Add phone capture and WeChat CTA
+  html += `
+    <div class="wechat-section" id="wechatSection" style="display:none;">
+      <h4>📱 获取完整方案 + 1对1咨询</h4>
+      <p>扫码添加企业微信，获取详细融资方案<br>15年融资专家为您定制最优方案</p>
+      <img src="wechat-qr.png" alt="企业微信" class="wechat-qr" />
+      <br>
+      <a href="#" class="wechat-btn" onclick="showPhoneModal();return false;">👉 预约顾问咨询</a>
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="submit-btn" onclick="showPhoneModal()" style="max-width:300px;">
+        📞 获取完整方案并预约顾问
+      </button>
+    </div>
+  `;
+  
+  return html;
+}
+
+// ===================== Phone Capture =====================
+let pendingResults = null;
+let pendingParams = null;
+
+function showPhoneModal() {
+  // Check if already captured
+  if (localStorage.getItem('qirong_phone')) {
+    document.getElementById('wechatSection').style.display = 'block';
+    document.getElementById('wechatSection').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  
+  const modal = document.createElement('div');
+  modal.className = 'phone-modal-overlay';
+  modal.id = 'phoneModal';
+  modal.innerHTML = `
+    <div class="phone-modal">
+      <h3>📞 获取完整融资方案</h3>
+      <p>请输入您的手机号，15年融资专家将为您1对1定制最优方案</p>
+      <input type="tel" id="phoneInput" placeholder="请输入手机号" maxlength="11" />
+      <button class="btn-primary" onclick="submitPhone()">立即获取方案</button>
+      <button class="btn-skip" onclick="skipPhone()">暂不填写，直接查看</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('phoneInput').focus();
+}
+
+function submitPhone() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    alert('请输入正确的手机号');
+    return;
+  }
+  
+  // Save phone
+  localStorage.setItem('qirong_phone', phone);
+  localStorage.setItem('qirong_time', new Date().toISOString());
+  
+  // Remove modal
+  document.getElementById('phoneModal').remove();
+  
+  // Show WeChat section
+  document.getElementById('wechatSection').style.display = 'block';
+  document.getElementById('wechatSection').scrollIntoView({ behavior: 'smooth' });
+  
+  // In real implementation, send to server
+  console.log('Phone captured:', phone);
+  alert('✅ 提交成功！请扫码添加企业微信，或等待顾问联系您。');
+}
+
+function skipPhone() {
+  document.getElementById('phoneModal').remove();
+  document.getElementById('wechatSection').style.display = 'block';
+  document.getElementById('wechatSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ===================== UI 控制 =====================
+const chatMessages = document.getElementById('chatMessages');
+
+function addMessage(role, content, isHTML = false) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `msg ${role}`;
+  const avatarHTML = role === 'ai' 
+    ? '<img src="logo.jpg" alt="企融智配" />' 
+    : '👤';
+  if (isHTML) {
+    msgDiv.innerHTML = `
+      <div class="avatar ${role}">${avatarHTML}</div>
+      <div class="bubble">${content}</div>`;
+  } else {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = content;
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${role}`;
+    if (role === 'ai') {
+      const img = document.createElement('img');
+      img.src = 'logo.jpg';
+      img.alt = '企融智配';
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = avatarHTML;
+    }
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(bubble);
+  }
+  chatMessages.appendChild(msgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return msgDiv;
+}
+
+function addTypingIndicator() {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'msg ai';
+  msgDiv.id = 'typing';
+  msgDiv.innerHTML = `
+    <div class="avatar ai"><img src="logo.jpg" alt="企融智配" /></div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  chatMessages.appendChild(msgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+function showParamSummary(params) {
+  const lines = [];
+  const yearMap = {'0.3':'不足6个月','0.5':'约6个月','1':'约1年','2':'约2年','3':'约3年','5':'约5年','10':'5年以上'};
+  if (params.years != null) lines.push(`📅 企业成立年限：${yearMap[String(params.years)] || params.years + '年'}`);
+  if (params.taxLevel) lines.push(`⭐ 纳税等级：${params.taxLevel}级`);
+  if (params.taxAmount != null) lines.push(`💰 年纳税额：约${params.taxAmount}万元`);
+  if (params.revenue != null) lines.push(`📊 年营业收入：约${params.revenue}万元`);
+  const cMap = {none:'无抵押物', house:'有房产（无按揭）', house_mortgage:'有房产（有按揭）', commercial:'商业房产'};
+  if (params.collateral) lines.push(`🏠 抵押物：${cMap[params.collateral] || params.collateral}`);
+  return lines.join('\n');
+}
+
+function handleFormSubmit() {
+  const years = parseFloat(document.getElementById('f_years').value);
+  const taxLevel = document.getElementById('f_tax_level').value;
+  const taxAmount = parseFloat(document.getElementById('f_tax_amount').value);
+  const revenue = parseFloat(document.getElementById('f_revenue').value);
+  const collateral = document.getElementById('f_collateral').value;
+
+  if (!document.getElementById('f_years').value || !taxLevel || !document.getElementById('f_tax_amount').value || !document.getElementById('f_revenue').value || !collateral) {
+    alert('请完整填写企业信息后再匹配！');
+    return;
+  }
+
+  const params = { years, taxLevel, taxAmount, revenue, collateral };
+  
+  // 用户消息
+  addMessage('user', showParamSummary(params));
+
+  // 模拟AI思考
+  setTimeout(() => {
+    addTypingIndicator();
+    setTimeout(() => {
+      removeTypingIndicator();
+      const results = matchProducts(params);
+      pendingResults = results;
+      pendingParams = params;
+      const html = `正在为您从 <strong>45款</strong> 银行产品中筛选最优方案…<br><br>` + renderResults(results, params);
+      addMessage('ai', html, true);
+      
+      // Auto show phone modal after 2 seconds if not captured
+      setTimeout(() => {
+        if (!localStorage.getItem('qirong_phone')) {
+          showPhoneModal();
+        } else {
+          document.getElementById('wechatSection').style.display = 'block';
+        }
+      }, 2000);
+    }, 1200);
+  }, 300);
+}
+
+function handleQuickInput() {
+  const input = document.getElementById('quickInput');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  addMessage('user', text);
+  input.value = '';
+
+  setTimeout(() => {
+    addTypingIndicator();
+    setTimeout(() => {
+      removeTypingIndicator();
+      const params = parseNaturalInput(text);
+      const hasAny = Object.values(params).some(v => v !== null);
+      
+      if (!hasAny) {
+        addMessage('ai', '您好！我没有从您的描述中识别到足够的企业信息。请告诉我：\n\n① 企业成立几年？\n② 纳税等级（A/B/C/D）？\n③ 年纳税额大约多少万？\n④ 年营业收入大约多少万？\n⑤ 有没有房产可以抵押？\n\n例如：「企业成立3年，B级纳税，年纳税5万，年营收500万，有房产抵押」');
+        return;
+      }
+      
+      // 填补默认值
+      if (params.years === null) params.years = 2;
+      if (params.taxLevel === null) params.taxLevel = 'C';
+      if (params.taxAmount === null) params.taxAmount = 2;
+      if (params.revenue === null) params.revenue = 300;
+      if (params.collateral === null) params.collateral = 'none';
+
+      const summary = showParamSummary(params);
+      const results = matchProducts(params);
+      pendingResults = results;
+      pendingParams = params;
+      const html = `已识别您的企业信息如下：<br><pre style="margin:8px 0;white-space:pre-wrap;font-size:13px;">${summary}</pre>正在匹配最优融资方案…<br><br>` + renderResults(results, params);
+      addMessage('ai', html, true);
+      
+      // Auto show phone modal after 2 seconds if not captured
+      setTimeout(() => {
+        if (!localStorage.getItem('qirong_phone')) {
+          showPhoneModal();
+        } else {
+          document.getElementById('wechatSection').style.display = 'block';
+        }
+      }, 2000);
+    }, 1500);
+  }, 200);
+}
+
+// Enter 键发送
+document.getElementById('quickInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') handleQuickInput();
+});
+</script>
+</body>
+</html>
